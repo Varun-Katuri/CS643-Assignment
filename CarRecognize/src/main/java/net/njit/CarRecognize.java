@@ -5,22 +5,22 @@
 
 package net.njit.cc362;
 
-//Region Service = US_EAST_1
+///Region Service = US_EAST_1
 import software.amazon.awssdk.regions.Region;
-//Client for Rekognition service
+///Client for Rekognition service
 import software.amazon.awssdk.services.rekognition.RekognitionClient;
-//Using Image,Label,DetectLabelsRequest,DetectLabelsResponse, S3Object Objects
+///Using Image,Label,DetectLabelsRequest,DetectLabelsResponse, S3Object Objects
 import software.amazon.awssdk.services.rekognition.model.*;
-//Client for S3 service
+///Client for S3 service
 import software.amazon.awssdk.services.s3.S3Client;
-//Using ListObjectsV2Request,ListObjectsV2Response Objects
+///Using ListObjectsV2Request,ListObjectsV2Response Objects
 import software.amazon.awssdk.services.s3.model.*;
-//Client for SQS service
+///Client for SQS service
 import software.amazon.awssdk.services.s3.model.S3Object;
 import software.amazon.awssdk.services.sqs.SqsClient;
-//Using CreateQueueRequest,GetQueueRequest,ListQueuesRequest,ListQueuesResponse,QueueNameExistsException,SendMessageRequest
+///Using CreateQueueRequest,GetQueueRequest,ListQueuesRequest,ListQueuesResponse,QueueNameExistsException,SendMessageRequest
 import software.amazon.awssdk.services.sqs.model.*;
-//List,Map
+///List,Map
 import java.util.*;
 
 public class CarRecognize {
@@ -50,20 +50,20 @@ public class CarRecognize {
         // Create queue or retrieve the queueUrl if it already exists.
         String queueUrl = "";
         try {
-            ListQueuesRequest QueReq = ListQueuesRequest.builder()
+            ListQueuesRequest QueReQ = ListQueuesRequest.builder()
                     .queueNamePrefix(queueName)
                     .build();
-            ListQueuesResponse QueRes = sqs.listQueues(QueReq);
+            ListQueuesResponse QueRes = sqs.listQueues(QueReQ);
 
             if (QueRes.queueUrls().size() == 0) {
                 CreateQueueRequest request = CreateQueueRequest.builder()
-                        .attributesWithStrings(Map.of("FifoQueue", "true", "ContentBasedDeduplication", "true"))
+                        .attributesWithStrings(Map.of("fifoQueue", "true", "contentBasedDeduplication", "True"))
                         .queueName(queueName)
                         .build();
                 sqs.createQueue(request);
 
                 GetQueueUrlRequest getURLQue = GetQueueUrlRequest.builder()
-                        .queueName(queueName)
+                        .queueName(QueueName)
                         .build();
                 queueUrl = sqs.getQueueUrl(getURLQue).queueUrl();
             } else {
@@ -73,7 +73,7 @@ public class CarRecognize {
             throw e;
         }
 
-        // Process the 10 images in the S3 bucket
+        // Process 10 images in S3 bucket
         try {
             ListObjectsV2Request listObjectsReqManual = ListObjectsV2Request.builder().bucket(bucketName).maxKeys(10)
                     .build();
@@ -99,7 +99,7 @@ public class CarRecognize {
                 }
             }
 
-            // Signal the end of image processing by sending "-1" to the queue
+            // /Signal  for the end of image processing, sending "-1" to the queue
             sqs.sendMessage(SendMessageRequest.builder().queueUrl(queueUrl).messageGroupId(queueGroup).messageBody("-1")
                     .build());
         } catch (Exception e) {
