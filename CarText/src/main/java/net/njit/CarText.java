@@ -26,7 +26,7 @@ public class CarText {
 
     public static void main(String[] args) {
 
-        String bucketName = "cs643-njit-project1";
+        String bucketName = "njit-cs-643";
         String queueName = "car.fifo"; // -1 is the last on to get processed in the FIFO queue
 
         S3Client s3 = S3Client.builder()
