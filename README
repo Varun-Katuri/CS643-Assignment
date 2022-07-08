@@ -1,6 +1,88 @@
-CS643-852
+CS643
 Programming Assignment 1
 Author: Varun Katuri
-Date: 07/06/2022
+Date: 07/07/2022
 
---To Do --
+--Aws steps
+Need to setup the cloud environment and run this application in the cloud on 2 EC2s, connect through sqs
+Connect rekognition, and S3 bucket(the images are stored)
+follow the below steps.
+
+--IAM Setup
+Navigate to "IAM" -> "Access Management" -> "Policies".  Give full access to the following three policies and Create the profile
+
+	AmazonRekognitionFullAccess
+	AmazonS3FullAccess
+	AmazonSQSFullAccess
+
+--EC2 Setup [Perform for EC2_A and EC2_B]
+click on "Services" -> "EC2"
+click on "Instances" in the drop down  Section 
+click on "Launch Instances" -> "Launch Instances" 
+Select the "Red Hat Enterprise Linux 8 (HVM), SSD Volume Type - ami-0b0af3577fe5e3532"  
+Select the "t2.micro type (Free tier eligible)" 
+click "Next: Configure Instance Details"
+	Ensure "Number of instances" is "1"
+click "Next: Add Storage"
+click "Next: Add Tags"
+	Insert "EC2_A" under "Key" and "Value"
+click "Next: Configure Security Group"
+	Click "Add Rule" to include the following and it will autofill:
+	SSH, HTTP, HTTPS
+	Under 'Source' drop down for each rule, select 'My IP'
+click "Review and Launch"
+	Click on "Launch" after reviewing your information
+
+--Run the following command to set the correct permissions for the .pem file:
+	$ chmod labsuser.pem
+
+--Connect to your EC2 instances (after they have started running), 
+To connect, run the following command in your terminal (replacing <YOUR_EC2_INSTANCE_PUBLIC_DNS> with 
+the "Public IPv4 DNS" attribute of either EC2 instance):
+	$ ssh -i “~/labsuser.pem" ec2-user@<YOUR_EC2_INSTANCE_PUBLIC_IPV4_ADDRESS>
+After you have connected, run the following commands to update Java from 1.7 to 1.8 on the EC2:
+	$ sudo yum install java-1.8.0-devel
+	$ sudo /usr/sbin/alternatives --config java
+Upon running the second command, you should enter the number that corresponds to 
+	java-1.8.0-openjdk.x86_64 (/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.322.b06-2.el8_5.x86_64/jre/bin/java)
+	**You will need to complete this step on BOTH EC2's.
+	
+--Credentials Setup [Access and Secret Keys]
+	Click on "Services" -> "IAM"
+	On the left tab side, under "Access Management" -> "Users"
+	Click on user created (e.g. varunkaturi)
+	Open the "Security credentials" tab, and then choose "Create access key"
+	To find out the new access key, choose "Show". Your credentials resemble the following:
+		Access key ID: JOHIHIACSCKNSCNHOSACNKAN
+		Secret access key: 56uha899abkj09sajhikjjasjjnjnask=-asbc
+	To download the key pair, choose 'Download .csv' file. 
+	Store the .csv file with keys in a secure location.
+
+--SSH into both EC2's that you created in the previous step, and on each 
+one, create a file:
+	$mkdir .aws
+	$touch .aws/credentials
+	$vi .aws/credentials
+	**Paste those copied credentials into the credential file on each EC2 as follows:
+	[default]
+	aws_access_key_id= THI5I5NOTTH3ACCE55K3Y  
+	aws_secret_access_key= THI5I5NOTTH3S3CR3TACCE55K3Y
+	**Note: You will need to re-copy and paste these credentials onto both EC2's whenever 
+	they change (after your session ends).
+
+--Running the application
+the terminal of your local machine, run the  commands to retrieve the GitHub Repository of the JAR files to be used for the 2 EC2 Instances.
+	$ git clone https://github.com/Varun-Katuri/CS643-Assignment.git
+
+--SSH into EC2-B and run the following command:
+	$ java -jar CS643-Assignment/CarText/CarText.jar
+	**This will begin running the code for text recognition. However, since it depends on items in the SQS queue 
+	to process, it will simply wait until we begin running the car recognition code. To begin running the car 
+	recognition code. 
+--SSH into EC2-A and run the following command:
+	$ java -jar CS643-Assignment/CarRecognize/CarRecognize.jar
+Now, both programs will be running simultaneously. The program for  EC2-A is processing images in the S3 bucket (njit-cs-643) and sending the indexes of images to
+include cars to EC2-B through SQS, which  is processing the images and showing which ones include text as well. once both programs have finished running, 
+you will find a file named output.txt on EC2-B in the home directory. This output file will display the indexes of images that contained both cars and text, along with the 
+associated text from each image.
+
